@@ -8,11 +8,11 @@ struct Bullet {
 const int MAX_BULLETS = 200;
 Bullet bullets[MAX_BULLETS];
 
-void spawnBullet(const sf::Vector2f& pos, const sf::Vector2f& dir, char owner) {
+void spawnBullet(const sf::Vector2f pos, const sf::Vector2f dir, float dist, char owner) {
     for(int i = 0; i < MAX_BULLETS; i++) {
         if(!bullets[i].active) {
             bullets[i].active = true;
-            bullets[i].pos = pos;
+            bullets[i].pos = pos + dist * dir;
             bullets[i].vel = normalize(dir) * 600.f;
             bullets[i].owner = owner;
             return;

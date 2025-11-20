@@ -10,3 +10,4 @@ sf::Vector2f normalize(sf::Vector2f v) {
     float len = length(v);
     return (len == 0.f) ? sf::Vector2f{0,0} : v / len;
 }
+
