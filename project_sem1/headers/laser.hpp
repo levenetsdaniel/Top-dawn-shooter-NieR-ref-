@@ -1,12 +1,3 @@
-struct Laser {
-    bool active = false;
-    bool damaging = false;
-    sf::FloatRect area;
-    float telegraphTime = 4.f;
-    float activeTime = 2.f;
-    float t = 0.f;
-};
-
 Laser laser;
 
 void triggerLaser(const sf::Vector2u screen, const sf::Vector2f target) {
@@ -18,23 +9,23 @@ void triggerLaser(const sf::Vector2u screen, const sf::Vector2f target) {
     }
 }
 
-void updateLaser(float dt) {
-    if(laser.active) {
-        laser.t += dt;
+void updateLaser(Laser *laser, float dt) {
+    if(laser->active) {
+        laser->t += dt;
         
-        if(!laser.damaging && laser.t >= laser.telegraphTime) {
-            laser.damaging = true;
-            laser.t = 0.f;
+        if(!laser->damaging && laser->t >= laser->telegraphTime) {
+            laser->damaging = true;
+            laser->t = 0.f;
         }
         
-        if(laser.damaging && laser.t >= laser.activeTime) {
-            laser.damaging = false;
-            laser.active = false;
+        if(laser->damaging && laser->t >= laser->activeTime) {
+            laser->damaging = false;
+            laser->active = false;
         }
     }
 }
 
-void drawLaser(sf::RenderWindow &window) {
+void drawLaser(Laser laser, sf::RenderWindow &window) {
     if(laser.active) {
         sf::RectangleShape shape;
         shape.setPosition({laser.area.position.x, laser.area.position.y});

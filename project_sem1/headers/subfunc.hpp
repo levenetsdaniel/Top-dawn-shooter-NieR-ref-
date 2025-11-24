@@ -11,3 +11,18 @@ sf::Vector2f normalize(sf::Vector2f v) {
     return (len == 0.f) ? sf::Vector2f{0,0} : v / len;
 }
 
+void centerText(sf::Text& text, sf::RenderWindow& screen) {
+    sf::FloatRect bounds = text.getGlobalBounds();
+    text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+    text.setPosition({screen.getSize().x / 2.f, screen.getSize().y / 2.f});
+};
+
+sf::Texture bgTex("textures/background.jpg");
+
+sf::Texture playerTex("textures/flight_unit.png");
+float playerRadius = playerTex.getSize().x * 0.05 / 2.f;
+
+sf::Texture enemyTex("textures/enemy.png");
+float enemyRadius = enemyTex.getSize().x * 0.05 / 2.f;
+
+sf::Font font("fonts/arialmt.ttf");

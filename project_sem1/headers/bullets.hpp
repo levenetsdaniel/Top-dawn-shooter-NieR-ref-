@@ -1,10 +1,3 @@
-struct Bullet {
-    sf::Vector2f pos;
-    sf::Vector2f vel;
-    bool active = false;
-    char owner;
-};
-
 const int MAX_BULLETS = 200;
 Bullet bullets[MAX_BULLETS];
 

@@ -1,26 +1,10 @@
 #include <cstdlib>
 
-struct Enemy {
-    bool active = false;
-    sf::Vector2f pos;
-    sf::Vector2f dir = {1, 0};
-    int pat;
-    float t = 0.f;
-    float hp = 5.f;
-    float fireCooldawn = 0.8;
-    float fireDelay = 0.4;
-    float spawnX;
-    float spawnY;
-    float angle = 0.f;
-};
-
 const int MAX_ENEMIES = 50;
 Enemy enemies[MAX_ENEMIES];
 int KILL_COUNT = 0;
-sf::Texture enemyTex("textures/enemy.png");
-float enemyRadius = enemyTex.getSize().x * 0.05 / 2.f;
 
-void enemyFire(Enemy enemy, const sf::Vector2f dir) {
+void enemyFire(Enemy enemy, const sf::Vector2f dir, float dt) {
     spawnBullet(enemy.pos, dir, enemyRadius, 'e');
 }
 
@@ -30,10 +14,14 @@ void spawnEnemy(sf::Vector2u screen) {
             enemies[i].active = true;
             enemies[i].hp = 5;
             enemies[i].angle = 0.f;
-            enemies[i].spawnX = (float)(rand() % screen.x);
-            enemies[i].spawnY = rand() % 2 == 0 ? 200.f : screen.y - 200.f;
+            enemies[i].amplitude = 150.f + rand() % 301;
             enemies[i].pos = {enemies[i].spawnX, enemies[i].spawnY};
             enemies[i].pat = rand()%3;
+            enemies[i].spawnX = (float)(rand() % screen.x);
+            if(enemies[i].pat == 1)
+                enemies[i].spawnY = screen.y / 2;
+            else
+                enemies[i].spawnY = rand() % 2 == 0 ? 200.f : screen.y - 200.f;
             return;
         }
     }
@@ -59,7 +47,7 @@ void updateEnemy(float dt, sf::Vector2u screen, const sf::Vector2f target) {
                     else if(enemies[i].pos.x > screen.x)
                         enemies[i].dir = {-1, 0};
                     enemies[i].pos.x += enemies[i].dir.x * 200.f * dt;
-                    enemies[i].pos.y = enemies[i].spawnY + std::sin(enemies[i].t * 3.f) * 150.f;
+                    enemies[i].pos.y = enemies[i].spawnY + std::sin(enemies[i].t * 3.f) * enemies[i].amplitude;
                     break;
                     
                 case 2:
@@ -84,7 +72,7 @@ void updateEnemy(float dt, sf::Vector2u screen, const sf::Vector2f target) {
             enemies[i].angle = (std::atan2(fireDir.x, fireDir.y) * 180.f) / 3.1415926f;
             enemies[i].fireDelay -= dt;
             if(enemies[i].fireDelay <= 0) {
-                enemyFire(enemies[i], fireDir);
+                enemyFire(enemies[i], fireDir, dt);
                 enemies[i].fireDelay = enemies[i].fireCooldawn;
             }
         }
@@ -93,19 +81,13 @@ void updateEnemy(float dt, sf::Vector2u screen, const sf::Vector2f target) {
 
 
 
-void drawEnemies(sf::RenderWindow& window) {
-//    sf::CircleShape shape(15.f);
-//    shape.setOrigin({15.f, 15.f});
-//    shape.setFillColor(sf::Color::Magenta);
-    
+void drawEnemies(sf::RenderWindow& window) {    
     sf::Sprite sprite{enemyTex};
     sprite.setOrigin({enemyTex.getSize().x / 2.f, enemyTex.getSize().y / 2.f});
     sprite.setScale({0.05, 0.05});
 
     for (int i = 0; i < MAX_ENEMIES; ++i) {
         if (enemies[i].active) {
-//            shape.setPosition(enemies[i].pos);
-//            window.draw(shape);
             
             sprite.setPosition(enemies[i].pos);
             sprite.setRotation(-sf::degrees(enemies[i].angle) + sf::degrees(90.f));

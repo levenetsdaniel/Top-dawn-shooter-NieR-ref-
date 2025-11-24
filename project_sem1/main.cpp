@@ -3,20 +3,18 @@
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
+#include "headers/structs.hpp"
 #include "headers/subfunc.hpp"
 #include "headers/particles.hpp"
 #include "headers/bullets.hpp"
-#include "headers/enemies.hpp"
 #include "headers/laser.hpp"
-#include "headers/background.hpp"
+#include "headers/enemies.hpp"
 
-const float MAX_HP = 500.f;
+const float MAX_HP = 10.f;
 float PLAYER_HP = MAX_HP;
-
-sf::Texture bgTex("textures/background.jpg");
-
-sf::Texture playerTex("textures/flight_unit.png");
-float playerRadius = playerTex.getSize().x * 0.05 / 2.f;
+char GAME_STATE = 'r';
+DeathFlash deathFlash;
+sf::Text MESSAGE(font);
 
 void checkCollision(sf::Vector2f& player) {
     sf::CircleShape playerShape(playerRadius);
@@ -54,16 +52,10 @@ void checkCollision(sf::Vector2f& player) {
                 for(int j = 0; j < MAX_ENEMIES; j++) {
                     if(enemies[j].active) {
                         
-                        sf::CircleShape enemyShape(enemyTex.getSize().x * 0.05 / 2.f);
+                        sf::CircleShape enemyShape(enemyRadius);
                         enemyShape.setOrigin({enemyRadius, enemyRadius});
                         enemyShape.setPosition(enemies[j].pos);
                         sf::FloatRect enemyBox = enemyShape.getGlobalBounds();
-                        
-//                        float w = enemyTex.getSize().x * 0.05;
-//                        float h = enemyTex.getSize().x * 0.05;
-//                        float x = enemies[i].pos.x - w/2.f;
-//                        float y = enemies[i].pos.y - h/2.f;
-//                        sf::FloatRect enemyBox({x, y}, {w, h});
                         
                         if(bulletBox.findIntersection(enemyBox)) {
                             bullets[i].active = false;
@@ -93,6 +85,11 @@ int main() {
     background.setOrigin({(float)window.getSize().x, (float)window.getSize().y});
     background.setScale({(float)bgTex.getSize().x / window.getSize().x, (float)bgTex.getSize().y / window.getSize().y});
     
+    sf::RectangleShape afterGameBg({(float)window.getSize().x, (float)window.getSize().y});
+    afterGameBg.setFillColor(sf::Color(0, 0, 0, 150));
+    afterGameBg.setPosition({0.f, 0.f});
+    
+    
     sf::RectangleShape hpBarBackground({200.f, 20.f});
     hpBarBackground.setFillColor(sf::Color(50, 50, 50));
     hpBarBackground.setPosition({20.f, 20.f});
@@ -101,14 +98,32 @@ int main() {
     hpBar.setFillColor(sf::Color::Green);
     hpBar.setPosition({20.f, 20.f});
 
-    sf::Vector2f playerPos{800.f, 450.f};
-//    sf::CircleShape player(20.f);
-//    player.setOrigin({20.f, 20.f});
-//    player.setFillColor(sf::Color::Cyan);
-    
     sf::Sprite player{playerTex};
     player.setOrigin({playerTex.getSize().x / 2.f, playerTex.getSize().y / 2.f});
+    sf::Vector2f playerPos{window.getSize().x / 2.f, window.getSize().y / 2.f};
     player.setScale({0.1, 0.1});
+    
+    MESSAGE.setCharacterSize(80);
+    MESSAGE.setFillColor(sf::Color::White);
+    
+    sf::Text restartText(font);
+    restartText.setCharacterSize(20);
+    restartText.setFillColor(sf::Color::White);
+    restartText.setString("Press R to restart");
+    centerText(restartText, window);
+    restartText.move({0, 60.f});
+    
+    sf::Text quitText(font);
+    quitText.setCharacterSize(20);
+    quitText.setFillColor(sf::Color::White);
+    quitText.setString("Press Q to quit");
+    centerText(quitText, window);
+    quitText.move({0, 80.f});
+    
+    sf::Text killCount(font);
+    killCount.setCharacterSize(40);
+    killCount.setFillColor(sf::Color::White);
+    killCount.setPosition({20, 40});
 
     float moveSpeed = 250.f;
     sf::Vector2f fireDir{0.f, -1.f};
@@ -128,109 +143,145 @@ int main() {
         while (const std::optional<sf::Event> event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
                 window.close();
-            if (const auto* resized = event->getIf<sf::Event::Resized>())
-                window.setSize({resized->size.x, resized->size.y});
         }
         
-        
-
         float dt = clock.restart().asSeconds();
-        fireDelay -= dt;
-        enemySpawnDelay -= dt;
-        laserDelay -= dt;
         
-//        updateBackground(dt);
-//        if(prevIndex < bgIndex) {
-//            std::string zeros = (bgIndex < 10 ? "00" : (bgIndex < 100 ? "0" : ""));
-//            std::string filename = "textures/frames/frame_" + zeros + std::to_string(bgIndex) + ".jpg";
-//            sf::Texture bgTex(filename);
-//            sf::Sprite background{bgTex};
-//            background.setOrigin({(float)window.getSize().x, (float)window.getSize().y});
-//            background.setScale({(float)bgTex.getSize().x / window.getSize().x, (float)bgTex.getSize().y / window.getSize().y});
-//        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-            if(playerPos.y - moveSpeed * dt > 20.f)
-                playerPos.y -= moveSpeed * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-            if(playerPos.y + moveSpeed * dt < window.getSize().y - 20.f)
-                playerPos.y += moveSpeed * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-            if(playerPos.x - moveSpeed * dt > 20.f)
-                playerPos.x -= moveSpeed * dt;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-            if(playerPos.x + moveSpeed * dt < window.getSize().x - 20.f)
-                playerPos.x += moveSpeed * dt;
-        
-//        sf::Vector2f trailDir = -(playerPos - player.getPosition());
-
-        sf::Vector2f inputDir{0.f, 0.f};
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-            inputDir.y -= 1;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-            inputDir.y += 1;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-            inputDir.x -= 1;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-            inputDir.x += 1;
-
-        if (inputDir.x != 0.f || inputDir.y != 0.f) {
-            inputDir = normalize(inputDir);
-            fireDir = normalize(lerp(fireDir, inputDir, aimSmooth * dt));
+        if(GAME_STATE == 'r') {
+            
+            fireDelay -= dt;
+            enemySpawnDelay -= dt;
+            laserDelay -= dt;
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+                if(playerPos.y - moveSpeed * dt > 20.f)
+                    playerPos.y -= moveSpeed * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+                if(playerPos.y + moveSpeed * dt < window.getSize().y - 20.f)
+                    playerPos.y += moveSpeed * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+                if(playerPos.x - moveSpeed * dt > 20.f)
+                    playerPos.x -= moveSpeed * dt;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+                if(playerPos.x + moveSpeed * dt < window.getSize().x - 20.f)
+                    playerPos.x += moveSpeed * dt;
+            
+            sf::Vector2f inputDir{0.f, 0.f};
+            
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+                inputDir.y -= 1;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
+                inputDir.y += 1;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
+                inputDir.x -= 1;
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
+                inputDir.x += 1;
+            
+            if (inputDir.x != 0.f || inputDir.y != 0.f) {
+                inputDir = normalize(inputDir);
+                fireDir = normalize(lerp(fireDir, inputDir, aimSmooth * dt));
+            }
+            
+            float angle = (std::atan2(fireDir.y, fireDir.x)) * 180.f/ 3.1415926f;
+            player.setRotation(sf::degrees(angle) + sf::degrees(90.f));
+            
+            if(fireDelay <= 0) {
+                spawnBullet(playerPos, fireDir,  20.f, 'p');
+                fireDelay = fireCooldown;
+            }
+            
+            if(enemySpawnDelay <= 0) {
+                spawnEnemy(window.getSize());
+                enemySpawnDelay = enemySpawnCooldown;
+            }
+            
+            if(laserDelay <= 0) {
+                triggerLaser(window.getSize(), playerPos);
+                laserDelay = laserCooldawn;
+            }
+            
+            player.setPosition(playerPos);
+            
+            updateBullet(dt, window.getSize());
+            
+            updateEnemy(dt, window.getSize(), playerPos);
+            
+            updateLaser(&laser, dt);
+            
+            updateParticles(dt);
+            
+            checkCollision(playerPos);
+            
+            killCount.setString("Kills: " + std::to_string(KILL_COUNT));
+            
+            float hp_percentage = PLAYER_HP / MAX_HP;
+            hpBar.setSize({200.f * hp_percentage, 20.f});
+            hpBar.setPosition({20.f, 20.f});
+            if(hp_percentage >= 0.7)
+                hpBar.setFillColor(sf::Color::Green);
+            else if(hp_percentage >= 0.25)
+                hpBar.setFillColor(sf::Color(255, 165, 0));
+            else
+                hpBar.setFillColor(sf::Color::Red);
         }
-
-        float angle = (std::atan2(fireDir.y, fireDir.x)) * 180.f/ 3.1415926f;
-        player.setRotation(sf::degrees(angle) + sf::degrees(90.f));
-        
-        if(fireDelay <= 0) {
-            spawnBullet(playerPos, fireDir,  20.f, 'p');
-            fireDelay = fireCooldown;
+            
+        if(GAME_STATE == 'd') {
+            if(deathFlash.active) {
+                deathFlash.t -= dt * 1.8;
+                
+                if(deathFlash.t <= 0) {
+                    deathFlash.t = 0.f;
+                    deathFlash.active = false;
+                }
+                else {
+                    deathFlash.flash.setSize({(float)window.getSize().x, (float)window.getSize().y});
+                    float intensity = 255.f * deathFlash.t;
+                    deathFlash.flash.setFillColor(sf::Color(255, 0, 0, intensity));
+                }
+                
+            }
         }
         
-        if(enemySpawnDelay <= 0) {
-            spawnEnemy(window.getSize());
-            enemySpawnDelay = enemySpawnCooldown;
+        if(PLAYER_HP == 0 && GAME_STATE != 'd') {
+            GAME_STATE = 'd';
+            deathFlash.active = true;
+            deathFlash.t = 1.f;
+            MESSAGE.setString("GAME OVER");
+            centerText(MESSAGE, window);
+        }
+        if(GAME_STATE == 'd' && !deathFlash.active && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
+            GAME_STATE = 'm';
+        
+        if(KILL_COUNT == 2 && GAME_STATE != 'w') {
+            GAME_STATE = 'w';
+            MESSAGE.setString("YOU WIN");
+            centerText(MESSAGE, window);
         }
         
-        if(laserDelay <= 0) {
-            triggerLaser(window.getSize(), playerPos);
-            laserDelay = laserCooldawn;
-        }
-        
-        player.setPosition(playerPos);
-        
-//        spawnFireTrail(playerPos, trailDir, 5);
-        
-        updateBullet(dt, window.getSize());
-        
-        updateEnemy(dt, window.getSize(), playerPos);
-        
-        updateLaser(dt);
-        
-        updateParticles(dt);
-        
-        checkCollision(playerPos);
-        
-        float hp_percentage = PLAYER_HP / MAX_HP;
-        sf::RectangleShape hpBar({200.f * hp_percentage, 20.f});
-        hpBar.setPosition({20.f, 20.f});
-        if(hp_percentage >= 0.7)
-            hpBar.setFillColor(sf::Color::Green);
-        else if(hp_percentage >= 0.25)
-            hpBar.setFillColor(sf::Color(255, 165, 0));
-        else
-            hpBar.setFillColor(sf::Color::Red);
-
+        if(GAME_STATE == 'd' || GAME_STATE == 'w')
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
+                window.close();
+            
         window.clear();
         window.draw(background);
         window.draw(hpBarBackground);
         window.draw(hpBar);
+        window.draw(killCount);
         window.draw(player);
         drawBullets(window);
         drawEnemies(window);
-        drawLaser(window);
+        drawLaser(laser, window);
         drawParticle(window);
+        if(deathFlash.active)
+            window.draw(deathFlash.flash);
+        if(GAME_STATE != 'r') {
+            window.draw(afterGameBg);
+            window.draw(MESSAGE);
+        }
+        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') {
+            window.draw(restartText);
+            window.draw(quitText);
+        }
         window.display();
     }
 

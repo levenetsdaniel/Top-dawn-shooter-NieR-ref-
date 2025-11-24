@@ -1,12 +1,3 @@
-struct Particle {
-    sf::Vector2f pos;
-    sf::Vector2f vel;
-    bool active = false;
-    float lifeTime;
-    int green = 0;
-    int blue = 0;
-};
-
 const int MAX_PARTICLES = 300;
 Particle particles[MAX_PARTICLES];
 
