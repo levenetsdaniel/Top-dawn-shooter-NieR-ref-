@@ -12,10 +12,14 @@ sf::Vector2f normalize(sf::Vector2f v) {
 }
 
 void centerText(sf::Text& text, sf::RenderWindow& screen) {
-    sf::FloatRect bounds = text.getGlobalBounds();
+    sf::FloatRect bounds = text.getLocalBounds();
     text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
     text.setPosition({screen.getSize().x / 2.f, screen.getSize().y / 2.f});
-};
+}
+
+void menu() {
+    
+}
 
 sf::Texture bgTex("textures/background.jpg");
 

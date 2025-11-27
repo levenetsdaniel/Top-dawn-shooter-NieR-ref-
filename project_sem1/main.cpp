@@ -2,6 +2,8 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <string>
+#include <cctype>
 #include <iostream>
 #include "headers/structs.hpp"
 #include "headers/subfunc.hpp"
@@ -10,11 +12,30 @@
 #include "headers/laser.hpp"
 #include "headers/enemies.hpp"
 
-const float MAX_HP = 10.f;
+char GAME_STATE = 'm';
+const float MAX_HP = 100.f;
 float PLAYER_HP = MAX_HP;
-char GAME_STATE = 'r';
-DeathFlash deathFlash;
-sf::Text MESSAGE(font);
+int KILL_TARGET = NAN;
+
+void reset() {
+    for(int i = 0; i < MAX_BULLETS; i++) {
+        if(bullets[i].active)
+            bullets[i].active = false;
+    }
+    
+    for(int i = 0; i < MAX_ENEMIES; i++) {
+        if(enemies[i].active)
+            enemies[i].active = false;
+    }
+    
+    for(int i = 0; i < MAX_PARTICLES; i++) {
+        if(particles[i].active)
+            particles[i].active = false;
+    }
+    
+    if(laser.active)
+        laser.active = false;
+}
 
 void checkCollision(sf::Vector2f& player) {
     sf::CircleShape playerShape(playerRadius);
@@ -32,7 +53,7 @@ void checkCollision(sf::Vector2f& player) {
     
     for(int i = 0; i < MAX_ENEMIES; i++) {
         sf::CircleShape enemyShape(15.f);
-        enemyShape.setOrigin({15.f, 15.f});
+        enemyShape.setOrigin({enemyRadius, enemyRadius});
         enemyShape.setPosition(enemies[i].pos);
         sf::FloatRect enemyBox = enemyShape.getGlobalBounds();
         
@@ -103,8 +124,40 @@ int main() {
     sf::Vector2f playerPos{window.getSize().x / 2.f, window.getSize().y / 2.f};
     player.setScale({0.1, 0.1});
     
+    sf::Text MESSAGE(font);
     MESSAGE.setCharacterSize(80);
     MESSAGE.setFillColor(sf::Color::White);
+    centerText(MESSAGE, window);
+    
+    sf::Text menuTitle(font);
+    menuTitle.setCharacterSize(60);
+    menuTitle.setFillColor(sf::Color::White);
+    menuTitle.setString("Choose kill target");
+    centerText(menuTitle, window);
+    menuTitle.move({0, -150});
+    
+    sf::Text option3(font);
+    option3.setString("3 enemies");
+    option3.setCharacterSize(50);
+    option3.setFillColor(sf::Color::White);
+    centerText(option3, window);
+    option3.move({0, -40.f});
+    
+    sf::Text option15(font);
+    option15.setString("15 enemies");
+    option15.setCharacterSize(50);
+    option15.setFillColor(sf::Color::White);
+    centerText(option15, window);
+    
+    sf::Text option50(font);
+    option50.setString("50 enemies");
+    option50.setCharacterSize(50);
+    option50.setFillColor(sf::Color::White);
+    centerText(option50, window);
+    option50.move({0, 40.f});
+    
+    sf::Color normalColor = sf::Color::White;
+    sf::Color hoverColor  = sf::Color(255, 220, 0);
     
     sf::Text restartText(font);
     restartText.setCharacterSize(20);
@@ -118,7 +171,12 @@ int main() {
     quitText.setFillColor(sf::Color::White);
     quitText.setString("Press Q to quit");
     centerText(quitText, window);
-    quitText.move({0, 80.f});
+    quitText.move({0, 100.f});
+    
+    sf::Text killTarget(font);
+    killTarget.setCharacterSize(40);
+    killTarget.setFillColor(sf::Color::White);
+    killTarget.setPosition({20, 90});
     
     sf::Text killCount(font);
     killCount.setCharacterSize(40);
@@ -134,6 +192,7 @@ int main() {
     float enemySpawnDelay = 0.f;
     float laserCooldawn = 15.f;
     float laserDelay = laserCooldawn;
+    DeathFlash deathFlash;
     
     srand(unsigned(time(0)));
 
@@ -143,6 +202,31 @@ int main() {
         while (const std::optional<sf::Event> event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
                 window.close();
+        
+            if(GAME_STATE == 'm') {
+                if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
+                    window.close();
+                
+                if (event->is<sf::Event::MouseButtonPressed>()) {
+                    sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+                    if (option3.getGlobalBounds().contains(mouse)) {
+                        KILL_TARGET = 3;
+                        GAME_STATE = 'r';
+                    }
+                    else if (option15.getGlobalBounds().contains(mouse)) {
+                        KILL_TARGET = 15;
+                        GAME_STATE = 'r';
+                    }
+                    
+                    else if (option50.getGlobalBounds().contains(mouse)) {
+                        KILL_TARGET = 50;
+                        GAME_STATE = 'r';
+                    }
+                    
+                    killTarget.setString("Target: " + std::to_string(KILL_TARGET));
+                }
+            }
         }
         
         float dt = clock.restart().asSeconds();
@@ -242,25 +326,62 @@ int main() {
             }
         }
         
-        if(PLAYER_HP == 0 && GAME_STATE != 'd') {
+        if(PLAYER_HP == 0 && GAME_STATE == 'r') {
             GAME_STATE = 'd';
             deathFlash.active = true;
             deathFlash.t = 1.f;
             MESSAGE.setString("GAME OVER");
             centerText(MESSAGE, window);
         }
-        if(GAME_STATE == 'd' && !deathFlash.active && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
-            GAME_STATE = 'm';
         
-        if(KILL_COUNT == 2 && GAME_STATE != 'w') {
+        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') { if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
+                reset();
+            
+                playerPos = {window.getSize().x / 2.f, window.getSize().y / 2.f};
+                player.setPosition(playerPos);
+                fireDir = {0.f, -1.f};
+                player.setRotation(sf::degrees(90.f));
+            
+                GAME_STATE = 'm';
+                KILL_COUNT = 0;
+                PLAYER_HP = MAX_HP;
+            }
+            
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
+                window.close();
+        }
+        
+        if(KILL_COUNT == KILL_TARGET && GAME_STATE == 'r') {
             GAME_STATE = 'w';
             MESSAGE.setString("YOU WIN");
             centerText(MESSAGE, window);
         }
         
-        if(GAME_STATE == 'd' || GAME_STATE == 'w')
-            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
-                window.close();
+        if (GAME_STATE == 'm') {
+            sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+
+            option3.setFillColor(normalColor);
+            option15.setFillColor(normalColor);
+            option50.setFillColor(normalColor);
+
+            if (option3.getGlobalBounds().contains(mouse))
+                option3.setFillColor(hoverColor);
+            if (option15.getGlobalBounds().contains(mouse))
+                option15.setFillColor(hoverColor);
+            if (option50.getGlobalBounds().contains(mouse))
+                option50.setFillColor(hoverColor);
+            
+            window.clear();
+            window.draw(background);
+            window.draw(afterGameBg);
+            window.draw(menuTitle);
+            window.draw(quitText);
+            window.draw(option3);
+            window.draw(option15);
+            window.draw(option50);
+            window.display();
+            continue;
+        }
             
         window.clear();
         window.draw(background);
