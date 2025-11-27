@@ -173,6 +173,13 @@ int main() {
     centerText(quitText, window);
     quitText.move({0, 100.f});
     
+    sf::Text resumeText(font);
+    resumeText.setCharacterSize(20);
+    resumeText.setFillColor(sf::Color::White);
+    resumeText.setString("Press N to resume");
+    centerText(resumeText, window);
+    resumeText.move({0, 140.f});
+    
     sf::Text killTarget(font);
     killTarget.setCharacterSize(40);
     killTarget.setFillColor(sf::Color::White);
@@ -307,6 +314,12 @@ int main() {
                 hpBar.setFillColor(sf::Color(255, 165, 0));
             else
                 hpBar.setFillColor(sf::Color::Red);
+            
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)) {
+                GAME_STATE = 'p';
+                std::cout << 'p' << std::endl;
+                continue;
+            }
         }
             
         if(GAME_STATE == 'd') {
@@ -334,18 +347,8 @@ int main() {
             centerText(MESSAGE, window);
         }
         
-        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') { if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R)) {
-                reset();
-            
-                playerPos = {window.getSize().x / 2.f, window.getSize().y / 2.f};
-                player.setPosition(playerPos);
-                fireDir = {0.f, -1.f};
-                player.setRotation(sf::degrees(90.f));
-            
-                GAME_STATE = 'm';
-                KILL_COUNT = 0;
-                PLAYER_HP = MAX_HP;
-            }
+        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') { if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
+                GAME_STATE = 'b';
             
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
                 window.close();
@@ -355,6 +358,20 @@ int main() {
             GAME_STATE = 'w';
             MESSAGE.setString("YOU WIN");
             centerText(MESSAGE, window);
+        }
+        
+        if(GAME_STATE == 'p') {
+            MESSAGE.setString("Pause");
+            centerText(MESSAGE, window);
+            
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
+                GAME_STATE = 'b';
+            
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Q))
+                window.close();
+            
+            if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::N))
+                GAME_STATE = 'r';
         }
         
         if (GAME_STATE == 'm') {
@@ -382,6 +399,20 @@ int main() {
             window.display();
             continue;
         }
+        
+        if(GAME_STATE == 'b') {
+            reset();
+        
+            playerPos = {window.getSize().x / 2.f, window.getSize().y / 2.f};
+            player.setPosition(playerPos);
+            fireDir = {0.f, -1.f};
+            player.setRotation(sf::degrees(90.f));
+        
+            GAME_STATE = 'm';
+            KILL_COUNT = 0;
+        }
+        
+        std::cout << GAME_STATE << std::endl;
             
         window.clear();
         window.draw(background);
@@ -399,7 +430,10 @@ int main() {
             window.draw(afterGameBg);
             window.draw(MESSAGE);
         }
-        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') {
+        if(GAME_STATE == 'p') {
+            window.draw(resumeText);
+        }
+        if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w' || GAME_STATE == 'p') {
             window.draw(restartText);
             window.draw(quitText);
         }
