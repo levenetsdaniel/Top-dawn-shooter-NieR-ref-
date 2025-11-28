@@ -13,9 +13,9 @@
 #include "headers/enemies.hpp"
 
 char GAME_STATE = 'm';
-const float MAX_HP = 100.f;
-float PLAYER_HP = MAX_HP;
-int KILL_TARGET = NAN;
+float MAX_HP;
+float PLAYER_HP;
+int KILL_TARGET;
 
 void reset() {
     for(int i = 0; i < MAX_BULLETS; i++) {
@@ -52,7 +52,7 @@ void checkCollision(sf::Vector2f& player) {
         PLAYER_HP -= 0.5;
     
     for(int i = 0; i < MAX_ENEMIES; i++) {
-        sf::CircleShape enemyShape(15.f);
+        sf::CircleShape enemyShape(enemyRadius);
         enemyShape.setOrigin({enemyRadius, enemyRadius});
         enemyShape.setPosition(enemies[i].pos);
         sf::FloatRect enemyBox = enemyShape.getGlobalBounds();
@@ -173,6 +173,10 @@ int main() {
     centerText(quitText, window);
     quitText.move({0, 100.f});
     
+    sf::Text score(font);
+    score.setCharacterSize(30);
+    score.setFillColor(sf::Color::White);
+    
     sf::Text resumeText(font);
     resumeText.setCharacterSize(20);
     resumeText.setFillColor(sf::Color::White);
@@ -182,7 +186,7 @@ int main() {
     
     sf::Text killTarget(font);
     killTarget.setCharacterSize(40);
-    killTarget.setFillColor(sf::Color::White);
+    killTarget.setFillColor(sf::Color::Yellow);
     killTarget.setPosition({20, 90});
     
     sf::Text killCount(font);
@@ -197,8 +201,9 @@ int main() {
     float fireDelay = 0.f;
     float enemySpawnCooldown = 4.f;
     float enemySpawnDelay = 0.f;
-    float laserCooldawn = 15.f;
-    float laserDelay = laserCooldawn;
+    float enemySpawnCoef = 0.01;
+    float laserCooldown = 15.f;
+    float laserDelay = laserCooldown;
     DeathFlash deathFlash;
     
     srand(unsigned(time(0)));
@@ -218,16 +223,25 @@ int main() {
                     sf::Vector2f mouse = window.mapPixelToCoords(sf::Mouse::getPosition(window));
 
                     if (option3.getGlobalBounds().contains(mouse)) {
+                        MAX_HP = 10.f;
+                        PLAYER_HP = MAX_HP;
                         KILL_TARGET = 3;
+                        enemySpawnCoef = 0.1;
                         GAME_STATE = 'r';
                     }
                     else if (option15.getGlobalBounds().contains(mouse)) {
+                        MAX_HP = 50.f;
+                        PLAYER_HP = MAX_HP;
                         KILL_TARGET = 15;
+                        enemySpawnCoef = 0.005;
                         GAME_STATE = 'r';
                     }
                     
                     else if (option50.getGlobalBounds().contains(mouse)) {
+                        MAX_HP = 150.f;
+                        PLAYER_HP = MAX_HP;
                         KILL_TARGET = 50;
+                        enemySpawnCoef = 0.0001;
                         GAME_STATE = 'r';
                     }
                     
@@ -243,6 +257,8 @@ int main() {
             fireDelay -= dt;
             enemySpawnDelay -= dt;
             laserDelay -= dt;
+            if( enemySpawnCooldown - dt > 1.5)
+                enemySpawnCooldown -= 0.1 * dt;
             
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
                 if(playerPos.y - moveSpeed * dt > 20.f)
@@ -288,7 +304,7 @@ int main() {
             
             if(laserDelay <= 0) {
                 triggerLaser(window.getSize(), playerPos);
-                laserDelay = laserCooldawn;
+                laserDelay = laserCooldown;
             }
             
             player.setPosition(playerPos);
@@ -345,6 +361,9 @@ int main() {
             deathFlash.t = 1.f;
             MESSAGE.setString("GAME OVER");
             centerText(MESSAGE, window);
+            score.setString("Score: " + std::to_string(KILL_COUNT));
+            centerText(score, window);
+            score.move({0, -60.f});
         }
         
         if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w') { if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
@@ -410,15 +429,15 @@ int main() {
         
             GAME_STATE = 'm';
             KILL_COUNT = 0;
+            enemySpawnCooldown = 4.f;
         }
-        
-        std::cout << GAME_STATE << std::endl;
             
         window.clear();
         window.draw(background);
         window.draw(hpBarBackground);
         window.draw(hpBar);
         window.draw(killCount);
+        window.draw(killTarget);
         window.draw(player);
         drawBullets(window);
         drawEnemies(window);
@@ -430,9 +449,10 @@ int main() {
             window.draw(afterGameBg);
             window.draw(MESSAGE);
         }
-        if(GAME_STATE == 'p') {
+        if(GAME_STATE == 'p')
             window.draw(resumeText);
-        }
+        if(GAME_STATE == 'd')
+            window.draw(score);
         if((GAME_STATE == 'd' && !deathFlash.active) || GAME_STATE == 'w' || GAME_STATE == 'p') {
             window.draw(restartText);
             window.draw(quitText);

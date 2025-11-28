@@ -7,6 +7,6 @@
 
 ##  MacOS
 
-### ```brew install sfml```
+ ```brew install sfml```
 
-### ```g++ main.cpp -I/opt/homebrew/Cellar/sfml/3.0.*/include -o app -L/opt/homebrew/Cellar/sfml/3.0.*/lib -lsfml-graphics -lsfml-window -lsfml-system -std=c++17```
+ ```g++ main.cpp -I/opt/homebrew/Cellar/sfml/3.0.*/include -o app -L/opt/homebrew/Cellar/sfml/3.0.*/lib -lsfml-graphics -lsfml-window -lsfml-system -std=c++17```
