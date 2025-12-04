@@ -51,7 +51,7 @@ void updateParticles(float dt) {
     }
 }
 
-void drawParticle(sf::RenderWindow& window) {
+void drawParticle(sf::RenderWindow *window) {
     sf::CircleShape part(3.f);
     part.setOrigin({3.f, 3.f});
     
@@ -61,7 +61,7 @@ void drawParticle(sf::RenderWindow& window) {
             
             float alpha = particles[i].lifeTime * 255.f;
             part.setFillColor(sf::Color(255, particles[i].green, particles[i].blue, alpha));
-            window.draw(part);
+            window->draw(part);
         }
     }
 }

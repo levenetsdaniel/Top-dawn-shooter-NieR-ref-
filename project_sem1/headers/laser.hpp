@@ -25,7 +25,7 @@ void updateLaser(Laser *laser, float dt) {
     }
 }
 
-void drawLaser(Laser laser, sf::RenderWindow &window) {
+void drawLaser(Laser laser, sf::RenderWindow *window) {
     if(laser.active) {
         sf::RectangleShape shape;
         shape.setPosition({laser.area.position.x, laser.area.position.y});
@@ -38,6 +38,6 @@ void drawLaser(Laser laser, sf::RenderWindow &window) {
         if(laser.damaging)
             shape.setFillColor(sf::Color(255, 0, 0, 200));
         
-        window.draw(shape);
+        window->draw(shape);
     }
 }

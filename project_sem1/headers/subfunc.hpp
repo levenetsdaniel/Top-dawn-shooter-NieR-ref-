@@ -11,10 +11,10 @@ sf::Vector2f normalize(sf::Vector2f v) {
     return (len == 0.f) ? sf::Vector2f{0,0} : v / len;
 }
 
-void centerText(sf::Text& text, sf::RenderWindow& screen) {
-    sf::FloatRect bounds = text.getLocalBounds();
-    text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
-    text.setPosition({screen.getSize().x / 2.f, screen.getSize().y / 2.f});
+void centerText(sf::Text *text, sf::RenderWindow *screen) {
+    sf::FloatRect bounds = text->getLocalBounds();
+    text->setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+    text->setPosition({screen->getSize().x / 2.f, screen->getSize().y / 2.f});
 }
 
 void menu() {

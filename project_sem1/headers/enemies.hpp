@@ -81,7 +81,7 @@ void updateEnemy(float dt, sf::Vector2u screen, const sf::Vector2f target) {
 
 
 
-void drawEnemies(sf::RenderWindow& window) {    
+void drawEnemies(sf::RenderWindow *window) {
     sf::Sprite sprite{enemyTex};
     sprite.setOrigin({enemyTex.getSize().x / 2.f, enemyTex.getSize().y / 2.f});
     sprite.setScale({0.05, 0.05});
@@ -91,7 +91,7 @@ void drawEnemies(sf::RenderWindow& window) {
             
             sprite.setPosition(enemies[i].pos);
             sprite.setRotation(-sf::degrees(enemies[i].angle) + sf::degrees(90.f));
-            window.draw(sprite);
+            window->draw(sprite);
         }
     }
 }

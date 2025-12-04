@@ -17,7 +17,7 @@ float MAX_HP;
 float PLAYER_HP;
 int KILL_TARGET;
 
-void reset() {
+void reset(sf::Vector2f *pos, sf::Sprite *player, sf::Vector2u screen, sf::Vector2f *fireDir) {
     for(int i = 0; i < MAX_BULLETS; i++) {
         if(bullets[i].active)
             bullets[i].active = false;
@@ -35,9 +35,17 @@ void reset() {
     
     if(laser.active)
         laser.active = false;
+    
+    *pos = {screen.x / 2.f, screen.y / 2.f};
+    player->setPosition(*pos);
+    *fireDir = {0.f, -1.f};
+    player->setRotation(sf::degrees(90.f));
+    
+    GAME_STATE = 'm';
+    KILL_COUNT = 0;
 }
 
-void checkCollision(sf::Vector2f& player) {
+void checkCollision(sf::Vector2f player) {
     sf::CircleShape playerShape(playerRadius);
     playerShape.setOrigin({playerRadius, playerRadius});
     playerShape.setPosition(player);
@@ -127,33 +135,40 @@ int main() {
     sf::Text MESSAGE(font);
     MESSAGE.setCharacterSize(80);
     MESSAGE.setFillColor(sf::Color::White);
-    centerText(MESSAGE, window);
+    centerText(&MESSAGE, &window);
     
     sf::Text menuTitle(font);
     menuTitle.setCharacterSize(60);
     menuTitle.setFillColor(sf::Color::White);
     menuTitle.setString("Choose kill target");
-    centerText(menuTitle, window);
+    centerText(&menuTitle, &window);
     menuTitle.move({0, -150});
+    
+    sf::Text tutorial(font);
+    tutorial.setCharacterSize(20);
+    tutorial.setFillColor(sf::Color::White);
+    tutorial.setString("Use WASD to move\tUse arrows to change fire direction");
+    centerText(&tutorial, &window);
+    tutorial.move({0, -200.f});
     
     sf::Text option3(font);
     option3.setString("3 enemies");
     option3.setCharacterSize(50);
     option3.setFillColor(sf::Color::White);
-    centerText(option3, window);
+    centerText(&option3, &window);
     option3.move({0, -40.f});
     
     sf::Text option15(font);
     option15.setString("15 enemies");
     option15.setCharacterSize(50);
     option15.setFillColor(sf::Color::White);
-    centerText(option15, window);
+    centerText(&option15, &window);
     
     sf::Text option50(font);
     option50.setString("50 enemies");
     option50.setCharacterSize(50);
     option50.setFillColor(sf::Color::White);
-    centerText(option50, window);
+    centerText(&option50, &window);
     option50.move({0, 40.f});
     
     sf::Color normalColor = sf::Color::White;
@@ -163,14 +178,14 @@ int main() {
     restartText.setCharacterSize(20);
     restartText.setFillColor(sf::Color::White);
     restartText.setString("Press R to restart");
-    centerText(restartText, window);
+    centerText(&restartText, &window);
     restartText.move({0, 60.f});
     
     sf::Text quitText(font);
     quitText.setCharacterSize(20);
     quitText.setFillColor(sf::Color::White);
     quitText.setString("Press Q to quit");
-    centerText(quitText, window);
+    centerText(&quitText, &window);
     quitText.move({0, 100.f});
     
     sf::Text score(font);
@@ -181,7 +196,7 @@ int main() {
     resumeText.setCharacterSize(20);
     resumeText.setFillColor(sf::Color::White);
     resumeText.setString("Press N to resume");
-    centerText(resumeText, window);
+    centerText(&resumeText, &window);
     resumeText.move({0, 140.f});
     
     sf::Text killTarget(font);
@@ -360,9 +375,9 @@ int main() {
             deathFlash.active = true;
             deathFlash.t = 1.f;
             MESSAGE.setString("GAME OVER");
-            centerText(MESSAGE, window);
+            centerText(&MESSAGE, &window);
             score.setString("Score: " + std::to_string(KILL_COUNT));
-            centerText(score, window);
+            centerText(&score, &window);
             score.move({0, -60.f});
         }
         
@@ -376,12 +391,12 @@ int main() {
         if(KILL_COUNT == KILL_TARGET && GAME_STATE == 'r') {
             GAME_STATE = 'w';
             MESSAGE.setString("YOU WIN");
-            centerText(MESSAGE, window);
+            centerText(&MESSAGE, &window);
         }
         
         if(GAME_STATE == 'p') {
             MESSAGE.setString("Pause");
-            centerText(MESSAGE, window);
+            centerText(&MESSAGE, &window);
             
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::R))
                 GAME_STATE = 'b';
@@ -415,20 +430,13 @@ int main() {
             window.draw(option3);
             window.draw(option15);
             window.draw(option50);
+            window.draw(tutorial);
             window.display();
             continue;
         }
         
         if(GAME_STATE == 'b') {
-            reset();
-        
-            playerPos = {window.getSize().x / 2.f, window.getSize().y / 2.f};
-            player.setPosition(playerPos);
-            fireDir = {0.f, -1.f};
-            player.setRotation(sf::degrees(90.f));
-        
-            GAME_STATE = 'm';
-            KILL_COUNT = 0;
+            reset(&playerPos, &player, window.getSize(), &fireDir);
             enemySpawnCooldown = 4.f;
         }
             
@@ -439,10 +447,10 @@ int main() {
         window.draw(killCount);
         window.draw(killTarget);
         window.draw(player);
-        drawBullets(window);
-        drawEnemies(window);
-        drawLaser(laser, window);
-        drawParticle(window);
+        drawBullets(&window);
+        drawEnemies(&window);
+        drawLaser(laser, &window);
+        drawParticle(&window);
         if(deathFlash.active)
             window.draw(deathFlash.flash);
         if(GAME_STATE != 'r') {

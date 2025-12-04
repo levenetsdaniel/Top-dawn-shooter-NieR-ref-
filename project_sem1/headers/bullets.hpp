@@ -25,7 +25,7 @@ void updateBullet(float dt, sf::Vector2u screen) {
     }
 }
 
-void drawBullets(sf::RenderWindow& window) {
+void drawBullets(sf::RenderWindow *window) {
     sf::CircleShape shape(5.f);
         shape.setOrigin({5.f, 5.f});
         shape.setFillColor(sf::Color::Yellow);
@@ -37,7 +37,7 @@ void drawBullets(sf::RenderWindow& window) {
                     shape.setFillColor(sf::Color::Yellow);
                 else if(bullets[i].owner == 'e')
                     shape.setFillColor(sf::Color::Red);
-                window.draw(shape);
+                window->draw(shape);
             }
         }
 }
